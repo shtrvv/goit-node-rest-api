@@ -8,7 +8,17 @@ import * as contactsService from "../services/contactsServices.js";
 
 export const getAllContacts = async (req, res, next) => {
   try {
-    const contacts = await contactsService.listContacts();
+    const { _id: owner } = req.user;
+
+    const { page = 1, limit = 10, favorite } = req.query;
+    const skip = (page - 1) * limit;
+
+    const query = { owner };
+    if (favorite !== undefined) {
+      query.favorite = favorite;
+    }
+
+    const contacts = await contactsService.listContacts(query, { skip, limit });
     res.status(200).send(contacts);
   } catch (error) {
     next(error);
@@ -52,7 +62,9 @@ export const createContact = async (req, res, next) => {
       throw HttpError(400, error.message);
     }
 
-    const newContact = await contactsService.addContact(req.body);
+    const { _id: owner } = req.user;
+    const newContact = await contactsService.addContact({ ...req.body, owner });
+
     res.status(201).send(newContact);
   } catch (error) {
     next(error);
