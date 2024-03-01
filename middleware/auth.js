@@ -6,12 +6,12 @@ export const auth = async (req, res, next) => {
   const authorizationHeader = req.headers.authorization;
 
   if (!authorizationHeader) {
-    next(HttpError(401));
+    return next(HttpError(401));
   }
 
   const [bearer, token] = authorizationHeader.split(" ");
   if (bearer !== "Bearer") {
-    next(HttpError(401));
+    return next(HttpError(401));
   }
 
   try {
@@ -19,7 +19,7 @@ export const auth = async (req, res, next) => {
     const user = await findUserById(id);
 
     if (!user || !user.token || user.token !== token) {
-      next(HttpError(401));
+      return next(HttpError(401));
     }
 
     req.user = user;
