@@ -1,7 +1,7 @@
 import Contact from "../models/contact.js";
 
-export function listContacts() {
-  return Contact.find();
+export function listContacts(query, params) {
+  return Contact.find(query).skip(params.skip).limit(params.limit);
 }
 
 export function getContactById(contactId) {
