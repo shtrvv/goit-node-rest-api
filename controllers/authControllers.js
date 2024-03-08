@@ -1,5 +1,10 @@
 import bcrypt from "bcrypt";
 import HttpError from "../helpers/HttpError.js";
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
+import jwt from "jsonwebtoken";
+import gravatar from "gravatar";
+import Jimp from "jimp";
 import {
   registerUserSchema,
   loginUserSchema,
@@ -9,9 +14,8 @@ import {
   findUser,
   setToken,
   signUp,
-  updateUserSubscription,
+  updateUserById,
 } from "../services/authServices.js";
-import jwt from "jsonwebtoken";
 
 export const register = async (req, res, next) => {
   try {
@@ -29,7 +33,13 @@ export const register = async (req, res, next) => {
       throw HttpError(409, "Email in use");
     }
 
-    const newUser = await signUp({ ...req.body, email: normalizedEmail });
+    const avatarURL = gravatar.url(normalizedEmail);
+
+    const newUser = await signUp({
+      ...req.body,
+      email: normalizedEmail,
+      avatarURL,
+    });
 
     res.status(201).send({
       user: {
@@ -113,14 +123,43 @@ export const updateSubscription = async (req, res, next) => {
 
     const { _id } = req.user;
 
-    const updatedUser = await updateUserSubscription(_id, req.body);
+    const updatedUser = await updateUserById(_id, req.body);
 
-    res
-      .status(200)
-      .send({
-        email: updatedUser.email,
-        subscription: updatedUser.subscription,
-      });
+    res.status(200).send({
+      email: updatedUser.email,
+      subscription: updatedUser.subscription,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateAvatar = async (req, res, next) => {
+  try {
+    const { _id } = req.user;
+    const { originalname } = req.file;
+
+    const img = await Jimp.read(req.file.path);
+    await img
+      .cover(
+        250,
+        250,
+        Jimp.HORIZONTAL_ALIGN_CENTER | Jimp.VERTICAL_ALIGN_MIDDLE
+      )
+      .writeAsync(req.file.path);
+
+    const filename = `${_id}_${originalname}`;
+
+    await fs.rename(
+      req.file.path,
+      path.join(process.cwd(), "public/avatars", filename)
+    );
+
+    const avatarURL = path.join("avatars", filename);
+
+    await updateUserById(_id, { avatarURL });
+
+    res.status(200).send({ avatarURL });
   } catch (error) {
     next(error);
   }
