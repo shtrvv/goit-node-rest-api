@@ -28,7 +28,9 @@ export const getAllContacts = async (req, res, next) => {
 export const getOneContact = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const contact = await contactsService.getContactById(id);
+    const { _id: owner } = req.user;
+
+    const contact = await contactsService.findOneContact({ _id: id, owner });
 
     if (!contact) {
       throw HttpError(404);
@@ -43,7 +45,9 @@ export const getOneContact = async (req, res, next) => {
 export const deleteContact = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const contact = await contactsService.removeContact(id);
+    const { _id: owner } = req.user;
+
+    const contact = await contactsService.deleteOneContact({ _id: id, owner });
 
     if (!contact) {
       throw HttpError(404);
@@ -83,7 +87,15 @@ export const updateContact = async (req, res, next) => {
     }
 
     const { id } = req.params;
-    const updatedContact = await contactsService.updateContact(id, req.body);
+    const { _id: owner } = req.user;
+
+    const updatedContact = await contactsService.updateOneContact(
+      {
+        _id: id,
+        owner,
+      },
+      req.body
+    );
 
     if (!updatedContact) {
       throw HttpError(404);
@@ -107,8 +119,13 @@ export const updateStatus = async (req, res, next) => {
     }
 
     const { id } = req.params;
-    const updatedContact = await contactsService.updateStatusContact(
-      id,
+    const { _id: owner } = req.user;
+
+    const updatedContact = await contactsService.updateOneContact(
+      {
+        _id: id,
+        owner,
+      },
       req.body
     );
 

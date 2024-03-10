@@ -19,7 +19,7 @@ export function findUserById(id) {
   return User.findById(id);
 }
 
-export function updateUserSubscription(id, body) {
+export function updateUserById(id, body) {
   return User.findByIdAndUpdate(id, body, {
     new: true,
   });
