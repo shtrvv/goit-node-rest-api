@@ -11,8 +11,8 @@ export function setToken(id, token = "") {
   return User.findByIdAndUpdate(id, { token });
 }
 
-export function findUser(email) {
-  return User.findOne(email);
+export function findUser(filter) {
+  return User.findOne(filter);
 }
 
 export function findUserById(id) {
